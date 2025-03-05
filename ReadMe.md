@@ -503,6 +503,7 @@ price.setFieldOptions(priceOption)
 def coin = getFieldByName("Coin")
 def currency = getFieldByName("Currency")
 def price = getFieldByName("Price")
+price.setReadOnly(true)
 
 CoinGeckoApiClient client = new CoinGeckoApiClientImpl();
 
