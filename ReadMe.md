@@ -619,5 +619,24 @@ if (validationResult.valid) {
 
 ```groovy
 
+import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.event.type.EventDispatchOption
+import com.atlassian.jira.issue.ModifiedValue
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.Issue
+
+
+def issueKey = "SS-39"
+
+def issueManager = ComponentAccessor.getIssueManager()
+
+MutableIssue issue = issueManager.getIssueByCurrentKey(issueKey)
+def user = issue.getReporter()
+def mv = new ModifiedValue(issue.summary.toString(), "Новое значение ModifiedValue")
+
+issue.setSummary(mv.getNewValue().toString())
+
+
+issueManager.updateIssue(user, issue, EventDispatchOption.DO_NOT_DISPATCH, true)
 ```
 
