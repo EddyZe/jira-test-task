@@ -129,7 +129,8 @@ log.info("Описание задачи ${issue.key} обновлено с ин�
 
 
 ```groovy
-
+import com.atlassian.jira.component.ComponentAccessor
+import com.onresolve.jira.behaviours.types.FieldOption
 import java.util.List
 import com.onresolve.jira.groovy.user.FormField
 import java.time.LocalDateTime
@@ -175,6 +176,8 @@ if (values) {
     } else {
         radioButtons.setHidden(true)
         checkBox.setHidden(true)
+        checkBox.setRequired(false)
+        radioButtons.setReadOnly(false)
     }
 
     if (parentValue == "Select list") {
@@ -347,11 +350,13 @@ void showSelectFields(FormField selectList, FormField miltiSelectList, Object ch
             miltiSelectList.setFormValue(['Поставить значения'])
             break
         case "Добавить несуществующие опции":
-
+            def options = Map.of("None", "None", "testcustom2", "Несуществующие поле 2", "testcustom3", "Несуществующие поле 3")
+            selectList.setFieldOptions(options)
+            miltiSelectList.setFieldOptions(options)
             break
         case "Почистить значения":
             selectList.setFormValue(null)
-            miltiSelectList.setFormValue([])
+            miltiSelectList.setFormValue(null)
             break
     }
 }
@@ -370,7 +375,6 @@ void showRadioButtons(FormField radioButtons, FormField checkBox, Object childVa
             radioButtons.setReadOnly(true)
             break
         case "Поменять опции":
-
 
             break
         case "Почистить значения":
@@ -537,3 +541,83 @@ currency.setFieldOptions(currencyOption)
 price.convertToSingleSelect()
 price.setFieldOptions(priceOption)
 ```
+### JIRA api
+
+---
+
+1
+
+```groovy
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.Issue
+import com.atlassian.jira.project.Project
+
+
+def projectKey = "SS"
+def issueType = "User Task"
+
+Issues.create(projectKey, issueType) {
+    setSummary("Создание задачи с помощью скрипта")
+    setDescription("descroption")
+    setAssignee("edzeeeee")
+    setReporter("test")
+    setComponents("UI")
+}
+```
+
+---
+
+2
+
+```groovy
+import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.event.type.EventDispatchOption
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.Issue
+
+def issueKey = "SS-39"
+
+def issueManager = ComponentAccessor.getIssueManager()
+
+MutableIssue issue = issueManager.getIssueByCurrentKey(issueKey)
+def user = issue.getReporter()
+issue.setSummary("Новый заголовок")
+
+
+issueManager.updateIssue(user, issue, EventDispatchOption.DO_NOT_DISPATCH, false)
+```
+
+3
+
+```groovy
+
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.Issue
+
+def issueKey = "SS-39"
+
+
+def issue = Issues.getByKey(issueKey)
+def issueService = ComponentAccessor.getIssueService()
+
+def paramsIssue = issueService.newIssueInputParameters()
+paramsIssue.summary = 'А вот еще один новый заголовк'
+paramsIssue.description = "А вот новое описание"
+
+def validationResult = issueService.validateUpdate(issue.getAssignee(), issue.getId(), paramsIssue)
+if (validationResult.valid) {
+    def updateResult = issueService.update(issue.getAssignee(), validationResult)
+    if (!updateResult.errorCollection.hasAnyErrors()) {
+        log.info("Задача обновлена")
+    }
+}
+```
+
+---
+
+4
+
+```groovy
+
+```
+
